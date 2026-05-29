@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api";
+const API = "https://attendance-tracker-7x22.onrender.com/api";
 
 function Dashboard() {
   const [students, setStudents] = useState([]);
 
-  const [percentages, setPercentages] = useState({});
+  const [attendanceData, setAttendanceData] = useState({});
 
   const [form, setForm] = useState({
     name: "",
@@ -14,7 +14,7 @@ function Dashboard() {
     className: "",
   });
 
-  const fetchPercentages = async (studentsData) => {
+  const fetchAttendanceData = async (studentsData) => {
     let temp = {};
 
     for (let student of studentsData) {
@@ -26,11 +26,19 @@ function Dashboard() {
 
       const present = records.filter((r) => r.status === "Present").length;
 
-      temp[student._id] =
-        total === 0 ? 0 : ((present / total) * 100).toFixed(1);
+      const absent = records.filter((r) => r.status === "Absent").length;
+
+      const percentage = total === 0 ? 0 : ((present / total) * 100).toFixed(1);
+
+      temp[student._id] = {
+        total,
+        present,
+        absent,
+        percentage,
+      };
     }
 
-    setPercentages(temp);
+    setAttendanceData(temp);
   };
 
   const fetchStudents = async () => {
@@ -38,7 +46,7 @@ function Dashboard() {
 
     setStudents(res.data);
 
-    fetchPercentages(res.data);
+    fetchAttendanceData(res.data);
   };
 
   useEffect(() => {
@@ -83,19 +91,34 @@ function Dashboard() {
         <input
           placeholder="Name"
           value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              name: e.target.value,
+            })
+          }
         />
 
         <input
           placeholder="Reg No"
           value={form.rollNo}
-          onChange={(e) => setForm({ ...form, rollNo: e.target.value })}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              rollNo: e.target.value,
+            })
+          }
         />
 
         <input
           placeholder="Branch"
           value={form.className}
-          onChange={(e) => setForm({ ...form, className: e.target.value })}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              className: e.target.value,
+            })
+          }
         />
 
         <button onClick={addStudent}>Add Student</button>
@@ -110,7 +133,13 @@ function Dashboard() {
 
             <p>Branch: {student.className}</p>
 
-            <p>Attendance: {percentages[student._id] || 0}%</p>
+            <p>Attendance: {attendanceData[student._id]?.percentage || 0}%</p>
+
+            <p>Present Days: {attendanceData[student._id]?.present || 0}</p>
+
+            <p>Absent Days: {attendanceData[student._id]?.absent || 0}</p>
+
+            <p>Total Days: {attendanceData[student._id]?.total || 0}</p>
 
             <div className="buttons">
               <button onClick={() => markAttendance(student._id, "Present")}>
